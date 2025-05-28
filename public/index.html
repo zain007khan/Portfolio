@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Template Selection</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    :root {
+      --bg-color: #f9f9f9;
+      --text-color: #000;
+      --card-bg: #fff;
+    }
+
+    .dark-mode {
+      --bg-color: #121212;
+      --text-color: #fff;
+      --card-bg: #1e1e1e;
+    }
+
+    header, nav, main, section {
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 1rem;
+      text-align: center;
+    }
+
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .category-filter button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 1rem;
+      background-color: #e0e0e0;
+      cursor: pointer;
+    }
+
+    .category-filter button.active {
+      background-color: #6200ea;
+      color: white;
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+      padding: 0 1rem;
+    }
+
+    .template-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .template-image {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .template-info {
+      padding: 0.75rem;
+    }
+
+    .template-name {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .template-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 0.4rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .preview-btn {
+      background-color: #f0f0f0;
+    }
+
+    .select-btn {
+      background-color: #6200ea;
+      color: white;
+    }
+
+    .premium-label {
+      background-color: #ff9800;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-left: auto;
+    }
+
+    .rating {
+      display: flex;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .rating button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #aaa;
+    }
+
+    .rating button.selected {
+      color: #ffc107;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--card-bg);
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0;
+    }
+
+    .bottom-nav button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: inherit;
+    }
+
+    @media (min-width: 768px) {
+      .template-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+    }
+
+    .visually-hidden {
+      position: absolute;
+      left: -10000px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 1rem;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Choose a Template</h1>
+    <div style="text-align: center; margin-top: 0.5rem;">
+      <input type="text" id="searchInput" oninput="searchTemplates()" placeholder="Search templates..." 
+             style="padding: 0.5rem; border-radius: 1rem; border: 1px solid #ccc; width: 80%;" 
+             aria-label="Search templates by name">
+    </div>
+    <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode">🌓</button>
+  </header>
+
+  <nav class="category-filter" role="tablist" aria-label="Template Categories">
+    <button class="active" role="tab" aria-selected="true">All</button>
+    <button role="tab" aria-selected="false">Minimal</button>
+    <button role="tab" aria-selected="false">Creative</button>
+    <button role="tab" aria-selected="false">Professional</button>
+    <button role="tab" aria-selected="false">Dark</button>
+  </nav>
+
+  <main>
+    <section aria-labelledby="template-section-title">
+      <h2 id="template-section-title" class="visually-hidden">Template Gallery</h2>
+      <div class="template-grid">
+        <div class="template-card" data-category="minimal">
+          <img src="minimal-template.jpg" alt="Minimal Template" class="template-image" loading="lazy" onclick="openModal('minimal-template.jpg')"/>
+          <div class="template-info">
+            <div class="template-name">Minimal Template</div>
+            <div class="rating" aria-label="Rate this template">
+              <button onclick="rateTemplate(this, 1)">&#9733;</button>
+              <button onclick="rateTemplate(this, 2)">&#9733;</button>
+              <button onclick="rateTemplate(this, 3)">&#9733;</button>
+              <button onclick="rateTemplate(this, 4)">&#9733;</button>
+              <button onclick="rateTemplate(this, 5)">&#9733;</button>
+            </div>
+            <div class="template-actions">
+              <button class="action-btn preview-btn" onclick="openModal('minimal-template.jpg')">Preview</button>
+              <button class="action-btn select-btn">Select</button>
+            </div>
+          </div>
+        </div>
+        <div class="template-card" data-category="creative">
+          <img src="CreativeTemplate.jpeg" alt="Creative Template" class="template-image" loading="lazy" onclick="openModal('creative-template.jpg')"/>
+          <div class="template-info">
+            <div class="template-name">Creative Template</div>
+            <div class="rating" aria-label="Rate this template">
+              <button onclick="rateTemplate(this, 1)">&#9733;</button>
+              <button onclick="rateTemplate(this, 2)">&#9733;</button>
+              <button onclick="rateTemplate(this, 3)">&#9733;</button>
+              <button onclick="rateTemplate(this, 4)">&#9733;</button>
+              <button onclick="rateTemplate(this, 5)">&#9733;</button>
+            </div>
+            <div class="template-actions">
+              <button class="action-btn preview-btn" onclick="openModal('CreativeTemplate.jpeg')">Preview</button>
+              <button class="action-btn select-btn">Select</button>
+            </div>
+          </div>
+        </div>
+        <div class="template-card" data-category="professional">
+          <img src="professional-template.jpg" alt="Professional Template" class="template-image" loading="lazy" onclick="openModal('professional-template.jpg')"/>
+          <div class="template-info">
+            <div class="template-name">Professional Template</div>
+            <div class="rating" aria-label="Rate this template">
+              <button onclick="rateTemplate(this, 1)">&#9733;</button>
+              <button onclick="rateTemplate(this, 2)">&#9733;</button>
+              <button onclick="rateTemplate(this, 3)">&#9733;</button>
+              <button onclick="rateTemplate(this, 4)">&#9733;</button>
+              <button onclick="rateTemplate(this, 5)">&#9733;</button>
+            </div>
+            <div class="template-actions">
+              <button class="action-btn preview-btn" onclick="openModal('professional-template.jpg')">Preview</button>
+              <button class="action-btn select-btn">Select</button>
+            </div>
+          </div>
+        </div>
+        <div class="template-card" data-category="dark">
+          <img src="dark-template.png" alt="Dark Template" class="template-image" loading="lazy" onclick="openModal('dark-template.jpg')"/>
+          <div class="template-info">
+            <div class="template-name">Dark Template</div>
+            <div class="rating" aria-label="Rate this template">
+              <button onclick="rateTemplate(this, 1)">&#9733;</button>
+              <button onclick="rateTemplate(this, 2)">&#9733;</button>
+              <button onclick="rateTemplate(this, 3)">&#9733;</button>
+              <button onclick="rateTemplate(this, 4)">&#9733;</button>
+              <button onclick="rateTemplate(this, 5)">&#9733;</button>
+            </div>
+            <div class="template-actions">
+              <button class="action-btn preview-btn" onclick="openModal('dark-template.png')">Preview</button>
+              <button class="action-btn select-btn">Select</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" role="navigation" aria-label="Main Navigation">
+    <button aria-label="Home">🏠</button>
+    <button aria-label="Templates">🎨</button>
+    <button aria-label="Settings">⚙️</button>
+  </nav>
+
+  <div class="modal" id="previewModal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <img id="modalImg" src="" alt="Preview Template" style="max-width: 100%; height: auto;"/>
+    </div>
+  </div>
+
+  <script>
+    // When user clicks "Select"
+function selectTemplate(templateName) {
+  fetch('http://localhost:3000/api/select-template', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId: "user123",  // from auth, or dummy for now
+      templateName
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert('Template saved!');
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Error saving template');
+  });
+}
+
+    const categoryButtons = document.querySelectorAll('.category-filter button');
+    const templateCards = document.querySelectorAll('.template-card');
+
+    categoryButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selected = btn.textContent.toLowerCase();
+
+        categoryButtons.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
+        templateCards.forEach(card => {
+          const category = card.dataset.category;
+          card.style.display = (selected === 'all' || category === selected) ? 'flex' : 'none';
+        });
+      });
+    });
+
+    function openModal(imgSrc) {
+      const modal = document.getElementById('previewModal');
+      const modalImg = document.getElementById('modalImg');
+      modalImg.src = imgSrc;
+      modal.style.display = 'flex';
+    }
+
+    function searchTemplates() {
+      const input = document.getElementById('searchInput').value.toLowerCase();
+      templateCards.forEach(card => {
+        const name = card.querySelector('.template-name').textContent.toLowerCase();
+        card.style.display = name.includes(input) ? 'flex' : 'none';
+      });
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('previewModal');
+      modal.style.display = 'none';
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+
+    function rateTemplate(button, rating) {
+      const buttons = button.parentElement.querySelectorAll('button');
+      buttons.forEach((btn, index) => {
+        btn.classList.toggle('selected', index < rating);
+      });
+    }
+  </script>
+</body>
+</html>
